@@ -22,7 +22,7 @@ pkgs.stdenv.mkDerivation rec {
         "-V revealjs-url=./assets/reveal.js"
 
         # Use katex from nixpkgs
-        (lib.optionals katex "--katex=./assets/katex/lib/node_modules/katex/dist/")
+        (lib.optionals katex "--katex=./assets/katex-dist/")
 
         "--slide-level ${builtins.toString slideLevel}"
       ] ++ builtins.attrValues (builtins.mapAttrs (k: v: "-V ${k}=${builtins.toString v}") pandocVariables));
@@ -30,7 +30,7 @@ pkgs.stdenv.mkDerivation rec {
     ''
       mkdir -p $out/assets
       ln -s ${reveal-js} $out/assets/reveal.js
-      ln -s ${pkgs.nodePackages.katex} $out/assets/katex
+      ln -s ${pkgs.nodePackages.katex}/lib/node_modules/katex/dist $out/assets/katex-dist
       ${pkgs.pandoc}/bin/pandoc -s -t revealjs -o $out/index.html ${mdPath} ${args}
     '';
 
