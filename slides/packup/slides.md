@@ -232,6 +232,7 @@ $$
 ## The hard constraints
 
 - For package description $\phi$ and user request $(l_i, l_d)$, denote $r$ as a "dummy" always-installed package:
+
 $$
 \begin{aligned}
 r & \land D(r, l_i) \land C(r, l_d) \land \bigwedge I_p^v \\
@@ -254,12 +255,14 @@ $$
 - $change(\phi, \psi)$:
   - Let $s_p$ be a fresh variable
   - **Hard clause**: (different clause needed for different installed state in $\phi$)
+  
     $$
     \begin{cases}
     \neg s_p \lor x_p^v & (\phi(p, v).installed = true) \\
     \neg s_p \lor \neg x_p^v & (\phi(p, v).installed = false)
     \end{cases}
     $$
+
   - **Soft clause**: $s_p$ with $W_c$
   - Higher score when less packages are changed
 
