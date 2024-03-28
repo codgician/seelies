@@ -31,6 +31,17 @@
         packup = import ./slides/packup { inherit lib pkgs reveal-js; };
       };
 
+      apps = {
+        repl = inputs.flake-utils.lib.mkApp {
+          drv = pkgs.writeShellScriptBin "repl" ''
+            confnix=$(mktemp)
+            echo "builtins.getFlake (toString $(git rev-parse --show-toplevel))" > $confnix
+            trap "rm $confnix" EXIT
+            nix repl $confnix
+          '';
+        };
+      };
+
       # Development shells
       devShells = {
         default = pkgs.mkShell {

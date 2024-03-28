@@ -18,13 +18,19 @@ pkgs.stdenv.mkDerivation rec {
     let
       mdPath = "${src}/slides.md";
       args = builtins.concatStringsSep " " ([
+        # Use reveal.js from input
+        "-V revealjs-url=./assets/reveal.js"
+
+        # Use katex from nixpkgs
+        (lib.optionals katex "--katex=./assets/katex/lib/node_modules/katex/dist/")
+
         "--slide-level ${builtins.toString slideLevel}"
-        (lib.optionals katex "--katex")
       ] ++ builtins.attrValues (builtins.mapAttrs (k: v: "-V ${k}=${builtins.toString v}") pandocVariables));
     in
     ''
-      mkdir $out
-      ln -s ${reveal-js} $out/reveal.js
+      mkdir -p $out/assets
+      ln -s ${reveal-js} $out/assets/reveal.js
+      ln -s ${pkgs.nodePackages.katex} $out/assets/katex
       ${pkgs.pandoc}/bin/pandoc -s -t revealjs -o $out/index.html ${mdPath} ${args}
     '';
 
