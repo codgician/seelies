@@ -1,4 +1,4 @@
-{
+{ lib, ... }: {
   mkRevealJs =
     { pkgs
     , lib
@@ -10,6 +10,7 @@
     , slideLevel ? 2
     , katex ? false
     , pandocVariables ? { }
+    , additonalFolders ? [ ]
     }:
 
     pkgs.stdenv.mkDerivation rec {
@@ -34,7 +35,7 @@
           ln -s ${reveal-js} $out/assets/reveal.js
           ln -s ${pkgs.nodePackages.katex}/lib/node_modules/katex/dist $out/assets/katex-dist
           ${pkgs.pandoc}/bin/pandoc -s -t revealjs -o $out/index.html ${mdPath} ${args}
-        '';
+        '' + builtins.concatStringsSep "\n" (builtins.map (folder: "ln -s ${folder} $out/${builtins.baseNameOf folder}") additonalFolders);
 
       meta = {
         inherit license;
