@@ -1,6 +1,6 @@
 { pkgs, lib, reveal-js }:
 
-import ../../lib/make-reveal-js.nix {
+lib.seelie.mkRevealJs {
   inherit pkgs lib reveal-js;
 
   name = "packup";
