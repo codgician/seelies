@@ -23,21 +23,18 @@
         inherit system;
         config.allowUnfree = true;
       };
+      slides = lib.seelies.getFolderNames ./slides;
+      mkSlidePkg = name: import ./slides/${name} { inherit lib pkgs reveal-js; };
+      mkSlideApp = name: inputs.flake-utils.lib.mkApp {
+        drv = pkgs.writeShellScriptBin name ''
+          echo "Serving slides at: http://localhost:8000"
+          ${pkgs.httplz}/bin/httplz -p 8000 -d '${mkSlidePkg name}'
+        '';
+      };
     in
     rec {
-      packages = {
-        intro-to-nix = import ./slides/intro-to-nix { inherit lib pkgs reveal-js; };
-        packup = import ./slides/packup { inherit lib pkgs reveal-js; };
-      };
-
-      apps = {
-        intro-to-nix = inputs.flake-utils.lib.mkApp {
-          drv = pkgs.writeShellScriptBin "intro-to-nix" ''
-            ${pkgs.httplz}/bin/httplz -p 8080 -d ${packages.intro-to-nix}
-            echo "Serving slides at http://localhost:8080"
-          '';
-        };
-
+      packages = builtins.listToAttrs (builtins.map (name: { inherit name; value = mkSlidePkg name; }) slides);
+      apps = (builtins.listToAttrs (builtins.map (name: { inherit name; value = mkSlideApp name; }) slides)) // {
         repl = inputs.flake-utils.lib.mkApp {
           drv = pkgs.writeShellScriptBin "repl" ''
             confnix=$(mktemp)

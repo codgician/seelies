@@ -1,6 +1,6 @@
 { pkgs, lib, reveal-js, ... }:
 
-lib.seelie.mkRevealJs {
+lib.seelies.mkRevealJs {
   inherit pkgs lib reveal-js;
 
   name = "intro-to-nix";
