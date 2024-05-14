@@ -5,7 +5,7 @@ lib.seelies.mkRevealJs {
 
   name = "packup";
   title = "Package Upgradability: the algorithm behind packup";
-  version = "20220923.1";
+  version = "2022.09.23-1";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;
 

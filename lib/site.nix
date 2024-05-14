@@ -14,7 +14,7 @@
     let
       indexMd = pkgs.writeTextFile {
         name = "index.md";
-        text = builtins.concatStringsSep "\n" ([ "${description}\n" ] ++ (builtins.map (p: "- [${p.meta.description}](${p.pname})") slidePkgs));
+        text = builtins.concatStringsSep "\n" ([ "${description}\n" ] ++ (builtins.map (p: "- [${p.meta.description}](${p.pname}) (${p.version})") slidePkgs));
       };
     in
     pkgs.stdenv.mkDerivation rec {
