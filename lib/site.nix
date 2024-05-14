@@ -24,7 +24,7 @@
       installPhase = builtins.concatStringsSep "\n" (
         [
           "mkdir -p $out"
-          "${pkgs.pandoc}/bin/pandoc -s -o $out/index.html ${indexMd} --metadata title='${title}'"
+          "${pkgs.pandoc}/bin/pandoc -s -f gfm -o $out/index.html ${indexMd} --metadata title='${title}'"
         ]
         ++ (builtins.map (p: "mkdir -p $out/${p.pname} \n ln -s ${p}/* $out/${p.pname}") slidePkgs)
       );

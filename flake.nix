@@ -38,8 +38,8 @@
         default = lib.seelies.mkSite {
           inherit pkgs lib slidePkgs;
           name = "seelies";
-          title = "💥 Seelies";
-          description = "All slides made by [codgician](https://github.com/codgician).";
+          title = "Seelies";
+          description = "A collection of slides made by [codgician](https://github.com/codgician).";
           version = "rolling";
           src = ./.;
           license = lib.licenses.cc-by-nc-sa-40;
