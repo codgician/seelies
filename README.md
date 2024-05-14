@@ -1,5 +1,7 @@
 # Seelies (WIP)
 
+[![build](https://github.com/codgician/seelies/actions/workflows/build.yml/badge.svg)](https://github.com/codgician/seelies/actions/workflows/build.yml)
+
 This repository contains slides I've made.
 
 ## Quick start

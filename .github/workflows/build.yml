@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: true
       - name: Install Nix
-        uses: cachix/install-nix-action@v25
+        uses: cachix/install-nix-action@v26
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: cachix/cachix-action@v14
