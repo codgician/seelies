@@ -4,6 +4,7 @@ lib.seelies.mkRevealJs {
   inherit pkgs lib reveal-js;
 
   name = "packup";
+  title = "Package Upgradability: the algorithm behind packup";
   version = "20220923.1";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;

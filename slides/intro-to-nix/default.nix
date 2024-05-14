@@ -4,7 +4,8 @@ lib.seelies.mkRevealJs {
   inherit pkgs lib reveal-js;
 
   name = "intro-to-nix";
-  version = "20230328.1";
+  title = "Introducing Nix: declarative builds and deployments";
+  version = "20230328.2";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;
 

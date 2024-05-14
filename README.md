@@ -7,16 +7,20 @@ This repository contains slides I've made.
 
 ## Quick start
 
-Taking slide `intro-to-nix` as an example. 
-
-To build the slide into static webpages, run:
+To build all slides:
 
 ```bash
-nix build .#intro-to-nix
+nix build
 ```
 
-To server the slide at `http://localhost:8000`, run:
+To host all slides with a static http server under localhost:
 
 ```bash
-nix run .#intro-to-nix
+nix run
+```
+
+To build a individual slide only (e.g. `packup`):
+
+```bash
+nix build .#packup
 ```

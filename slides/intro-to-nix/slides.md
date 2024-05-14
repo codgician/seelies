@@ -1,7 +1,12 @@
 ---
 author: [ codgician ]
-title: 'Nix: declarative build & deployments'
+title: 'Introducing Nix'
+subtitle: Declarative builds and deployments
 date: 2024.05.20
 ---
 
-# Hello World
+# Problem
+
+* We hope software we write still run from one machine to another.
+* Challenge: Most software today is not self-contained.
+

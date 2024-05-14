@@ -4,6 +4,7 @@ lib.seelies.mkRevealJs {
   inherit pkgs lib reveal-js;
 
   name = "permutation-group";
+  title = "浅谈置换群";
   version = "2020.04.11";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;

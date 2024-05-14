@@ -1,9 +1,11 @@
-{ lib, ... }: {
+{
   mkRevealJs =
     { pkgs
     , lib
     , reveal-js
     , name
+    , title ? name
+    , description ? null
     , version
     , src
     , license ? lib.licenses.cc-by-nc-sa-40
@@ -37,6 +39,10 @@
           ${pkgs.pandoc}/bin/pandoc -s -t revealjs -o $out/index.html ${mdPath} ${args}
         '' + builtins.concatStringsSep "\n" (builtins.map (folder: "ln -s ${folder} $out/${builtins.baseNameOf folder}") additonalFolders);
 
-      meta = { inherit license; };
+      meta = {
+        inherit license;
+        description = title;
+        longDescription = description;
+      };
     };
 }
