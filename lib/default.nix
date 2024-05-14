@@ -9,5 +9,6 @@ rec {
     (import ./revealjs.nix { inherit lib; })
     (import ./filesystem.nix { inherit lib; })
     (import ./misc.nix { inherit lib; })
+    (import ./site.nix { inherit lib; })
   ];
 }

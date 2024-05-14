@@ -37,8 +37,6 @@
           ${pkgs.pandoc}/bin/pandoc -s -t revealjs -o $out/index.html ${mdPath} ${args}
         '' + builtins.concatStringsSep "\n" (builtins.map (folder: "ln -s ${folder} $out/${builtins.baseNameOf folder}") additonalFolders);
 
-      meta = {
-        inherit license;
-      };
+      meta = { inherit license; };
     };
 }

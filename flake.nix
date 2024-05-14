@@ -25,16 +25,26 @@
       };
       slides = lib.seelies.getFolderNames ./slides;
       mkSlidePkg = name: import ./slides/${name} { inherit lib pkgs reveal-js; };
-      mkSlideApp = name: inputs.flake-utils.lib.mkApp {
-        drv = pkgs.writeShellScriptBin name ''
+      mkSlideApp = slidePkg: inputs.flake-utils.lib.mkApp {
+        drv = pkgs.writeShellScriptBin slidePkg.pname ''
           echo "Serving slides at: http://localhost:8000"
-          ${pkgs.httplz}/bin/httplz -p 8000 -d '${mkSlidePkg name}'
+          ${pkgs.httplz}/bin/httplz -p 8000 -d '${slidePkg}' --quiet
         '';
       };
+      slidePkgs = builtins.map mkSlidePkg slides;
     in
     rec {
-      packages = builtins.listToAttrs (builtins.map (name: { inherit name; value = mkSlidePkg name; }) slides);
-      apps = (builtins.listToAttrs (builtins.map (name: { inherit name; value = mkSlideApp name; }) slides)) // {
+      packages = (builtins.listToAttrs (builtins.map (p: { name = p.name; value = p; }) slidePkgs)) // {
+        all = lib.seelies.mkSite {
+          inherit pkgs lib slidePkgs;
+          name = "seelies";
+          version = "rolling";
+          src = ./.;
+          license = lib.licenses.cc-by-nc-sa-40;
+        };
+      };
+
+      apps = (builtins.mapAttrs (k: v: mkSlideApp v) packages) // {
         repl = inputs.flake-utils.lib.mkApp {
           drv = pkgs.writeShellScriptBin "repl" ''
             confnix=$(mktemp)
