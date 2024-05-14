@@ -3,9 +3,9 @@
 lib.seelies.mkRevealJs {
   inherit pkgs lib reveal-js;
 
-  name = "intro-to-nix";
+  name = "nix-intro";
   title = "Introducing Nix: declarative builds and deployments";
-  version = "2023.05.14-1";
+  version = "2024.05.14-1";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;
 
@@ -17,4 +17,6 @@ lib.seelies.mkRevealJs {
     width = 1366;
     height = 768;
   };
+
+  additonalFolders = [ ./images ];
 }
