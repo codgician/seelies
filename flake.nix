@@ -34,7 +34,7 @@
       slidePkgs = builtins.map mkSlidePkg slides;
     in
     rec {
-      packages = (builtins.listToAttrs (builtins.map (p: { name = p.name; value = p; }) slidePkgs)) // {
+      packages = (builtins.listToAttrs (builtins.map (p: { name = p.pname; value = p; }) slidePkgs)) // {
         default = lib.seelies.mkSite {
           inherit pkgs lib slidePkgs;
           name = "seelies";
