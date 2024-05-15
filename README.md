@@ -24,3 +24,20 @@ To build a individual slide only (e.g. `packup`):
 ```bash
 nix build .#packup
 ```
+
+To start development shell, run:
+
+```bash
+nix develop -c $SHELL
+```
+
+To debug flake output using a REPL, run:
+
+```bash
+nix run .#repl
+```
+
+## Details
+
+* Slides are written with [R Markdown](https://rmarkdown.rstudio.com) in file named `slides.Rmd` under `/slides` folder.
+* During build, `knitr` is first called to convert `*.Rmd` into `*.md`. Then `pandoc` is called to convert `*.md` into `*.html`.

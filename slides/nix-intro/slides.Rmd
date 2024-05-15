@@ -34,10 +34,12 @@ date: 2024.05.20
 
 ### Environment issues
 
+::: { .fragment  .fade-in-then-semi-out }
 - Software today is almost **never self-contained**.
 - Dependencies, both build time and run time, needs to be **compatible**. 
 - Components need to be able to **find** dependencies. 
 - Components may depend on **non-software artifacts** (e.g. databases).
+:::
 
 ::: { .notes }
 
@@ -107,7 +109,7 @@ Building and deploying monolithic software could still be complex.
 
 *Aren't we wasting storage spaces?*
 
-::: { .fragment .incremental }
+::: { .incremental }
 - Split into layers and share common bases.
 - Fetch files on-demand? (e.g. Zero Install System).
 - Storage today is getting cheaper anyway...
@@ -125,11 +127,17 @@ Splitting monolithic architecture can never be fine-grained, because its motavat
 
 ::: { .incremental }
 - Each component provide a set of constraints:
-  - Hard clauses, e.g. dependencies must exist.
-  - Soft clauses (weighted), e.g. version as new as possible.
-- Goal: Satisfy all hard caluses, and maximize satisfied soft clauses.
-- MAXSAT solver. e.g. rpm, apt, etc.
-- MAXSAT is NP-complete.
+  - Hard clauses, e.g. a dependency must exist.
+  - Soft clauses, e.g. version as new as possible.
+  - Satisfy all hard clauses. Maximize satisfied soft clauses.
+:::
+
+::: { .fragment .fade-in style="color:red" }
+MAXSAT problem (NP-complete).
+:::
+
+::: { .fragment .fade-in }
+Implement pseudo-solvers, e.g. rpm, apt, etc.
 :::
 
 ::: { .notes }
@@ -185,14 +193,14 @@ $$
 $$
 
 ::: { .r-stack }
-::: { .fragment .fade-out data-fragment-index="0" }
+::: { .fragment .fade-out data-fragment-index="1" }
 $$
 \begin{CD}
 x = 1, y = 2 @> f(x, y) = x + y >> 1 + 2 = 3
 \end{CD}
 $$
 :::
-::: { .fragment .current-visible data-fragment-index="0" }
+::: { .fragment .current-visible data-fragment-index="1" }
 $$
 \begin{CD}
 \text{gcc, libc, source, ...} @> \text{./configure, make, make install} >> \text{binary}
@@ -201,8 +209,11 @@ $$
 :::
 :::
 
----
+## Dealing side-effects
 
+## Derivation
+
+## Nix Store
 
 
 # Nix: as package manager
