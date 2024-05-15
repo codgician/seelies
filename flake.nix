@@ -58,13 +58,11 @@
       };
 
       # Development shells
-      devShells = {
-        default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            pandoc
-            httplz
-          ];
-        };
+      devShells.default = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          pandoc
+          httplz
+        ];
       };
 
       # Formatter: `nix fmt`
