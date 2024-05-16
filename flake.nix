@@ -57,8 +57,7 @@
         buildInputs = with pkgs; [
           pandoc
           httplz
-          (rWrapper.override { packages = with rPackages; [ rmarkdown ]; })
-          texlive.combined.scheme-full
+          (lib.mkREnv pkgs)
         ];
       };
 

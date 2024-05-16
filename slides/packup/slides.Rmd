@@ -3,6 +3,16 @@ author: [ "codgician" ]
 title: Package Upgradability
 subtitle: 📦 The algorithm behind "packup"
 date: 2022.09.23
+output:
+  revealjs::revealjs_presentation:
+    theme: black
+    highlight: pygments
+    transition: fade
+    background_transition: slide
+    center: true
+    reveal_options:
+      width: 1366
+      height: 768
 ---
 
 # Modelling

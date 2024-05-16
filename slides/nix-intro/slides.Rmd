@@ -3,6 +3,16 @@ author: [ codgician ]
 title: 'Introducing Nix'
 subtitle: Declarative builds and deployments
 date: 2024.05.20
+output:
+  revealjs::revealjs_presentation:
+    theme: black
+    highlight: pygments
+    transition: fade
+    background_transition: slide
+    center: true
+    reveal_options:
+      width: 1280
+      height: 720
 ---
 
 # Software deployment

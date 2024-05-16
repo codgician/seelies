@@ -2,6 +2,16 @@
 author: [ codgician ]
 title: 浅谈置换群
 date: 2020.03.14
+output:
+  revealjs::revealjs_presentation:
+    theme: black
+    highlight: pygments
+    transition: fade
+    background_transition: slide
+    center: true
+    reveal_options:
+      width: 1366
+      height: 768
 ---
 
 # 关系 { #relation }

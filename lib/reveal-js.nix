@@ -18,22 +18,22 @@
       inHeader = pkgs.writeTextFile {
         name = "katex-header.html";
         text = lib.optionals katex ''
-          <script defer="" src="./assets/katex-dist/katex.min.js"></script>
-          <script>document.addEventListener("DOMContentLoaded", function () {
-            var mathElements = document.getElementsByClassName("math");
-            var macros = [];
-            for (var i = 0; i < mathElements.length; i++) {
-              var texText = mathElements[i].firstChild;
-              if (mathElements[i].tagName == "SPAN") {
-              katex.render(texText.data, mathElements[i], {
-                displayMode: mathElements[i].classList.contains('display'),
-                throwOnError: false,
-                macros: macros,
-                fleqn: false
-              });
-            }}});
-          </script>
+          <script defer src="./assets/katex-dist/katex.min.js" />
+          <script defer src="./assets/katex-dist/contrib/auto-render.min.js" />
           <link rel="stylesheet" href="./assets/katex-dist/katex.min.css" />
+          <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              renderMathInElement(document.body, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false},
+                  {left: '\\(', right: '\\)', display: false},
+                  {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError : false
+              });
+           });
+          </script>
         '';
       };
     in
@@ -41,19 +41,10 @@
       pname = name;
       inherit version src;
 
-      buildInputs = with pkgs; [ pandoc which ];
+      buildInputs = with pkgs; [ pandoc ];
       installPhase =
         let
-          renv = pkgs.rWrapper.override { 
-            packages = with pkgs.rPackages; [ rmarkdown revealjs ];
-          };
-          rmdPath = "${src}/slides.Rmd";
-          pandocArgs = [
-            # Use katex from nixpkgs
-            (lib.optionals katex "--katex=./assets/katex-dist/")
-
-          ] ++ builtins.attrValues (builtins.mapAttrs (k: v: "-V ${k}=${builtins.toString v}") pandocVariables);
-          pandocArgsInR = builtins.concatStringsSep ", " (builtins.map (x: ''"${x}"'') pandocArgs);
+          renv = lib.seelies.mkREnv pkgs;
         in
         ''
           mkdir -p $out/assets
@@ -64,9 +55,7 @@
             output_file = "index.html",
             output_options = list(
               mathjax = NULL, 
-              includes = list(in_header = "${inHeader}"), 
-              theme = "black",
-              pandoc_args = c(${pandocArgsInR})
+              includes = list(in_header = "${inHeader}")
             )
           )'
           mv ./index.html $out/index.html
