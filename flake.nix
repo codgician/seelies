@@ -4,20 +4,26 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     flake-utils.url = "github:numtide/flake-utils";
+    reveal-js = {
+      url = "github:hakimel/reveal.js";
+      flake = false;
+    };
   };
 
   outputs =
     inputs @ { self
     , nixpkgs
     , flake-utils
+    , reveal-js
     , ...
     }: flake-utils.lib.eachDefaultSystem (system:
     let
       lib = nixpkgs.lib // (import ./lib { inherit nixpkgs; });
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-      };
+      pkgs = import nixpkgs
+        {
+          inherit system;
+          config.allowUnfree = true;
+        } // { seelies = { inherit reveal-js; }; };
       slides = lib.seelies.getFolderNames ./slides;
       mkSlidePkg = name: import ./slides/${name} { inherit lib pkgs; };
       mkSlideApp = slidePkg: inputs.flake-utils.lib.mkApp {
@@ -63,5 +69,7 @@
 
       # Formatter: `nix fmt`
       formatter = pkgs.nixpkgs-fmt;
+
+      renv = lib.seelies.mkREnv pkgs;
     });
 }

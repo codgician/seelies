@@ -14,29 +14,6 @@
     , additonalFolders ? [ ]
     }:
 
-    let
-      inHeader = pkgs.writeTextFile {
-        name = "katex-header.html";
-        text = lib.optionals katex ''
-          <script defer src="./assets/katex-dist/katex.min.js" />
-          <script defer src="./assets/katex-dist/contrib/auto-render.min.js" />
-          <link rel="stylesheet" href="./assets/katex-dist/katex.min.css" />
-          <script>
-            document.addEventListener("DOMContentLoaded", function() {
-              renderMathInElement(document.body, {
-                delimiters: [
-                  {left: '$$', right: '$$', display: true},
-                  {left: '$', right: '$', display: false},
-                  {left: '\\(', right: '\\)', display: false},
-                  {left: '\\[', right: '\\]', display: true}
-                ],
-                throwOnError : false
-              });
-           });
-          </script>
-        '';
-      };
-    in
     pkgs.stdenv.mkDerivation rec {
       pname = name;
       inherit version src;
@@ -45,20 +22,40 @@
       installPhase =
         let
           renv = lib.seelies.mkREnv pkgs;
+          pandocArgs = [
+            # Use reveal.js from input
+            "--variable"
+            "revealjs-url=./assets/reveal.js"
+
+            # Use katex from nixpkgs
+            (lib.optionals katex "--katex=./assets/katex-dist/")
+
+            # Code highlight theme
+            "--highlight-style=zenburn"
+
+            # Set slide levelnix
+            "--slide-level ${builtins.toString slideLevel}"
+
+            # Add RMarkdown lua filters
+            # "--lua-filter" 
+            # "${pkgs.rPackages.rmarkdown}/library/rmarkdown/rmarkdown/lua/pagebreak.lua"
+            # "--lua-filter"
+            # "${pkgs.rPackages.rmarkdown}/library/rmarkdown/rmarkdown/lua/latex-div.lua"
+
+          ] ++ builtins.concatLists (builtins.attrValues (lib.mapAttrs (k: v: [ "--variable" "${k}=${builtins.toString v}" ]) pandocVariables));
         in
         ''
           mkdir -p $out/assets
           ln -s ${pkgs.nodePackages.katex}/lib/node_modules/katex/dist $out/assets/katex-dist
-          ${renv}/bin/Rscript -e 'rmarkdown::render(
-            input = "slides.Rmd", 
-            output_format = "revealjs::revealjs_presentation", 
-            output_file = "index.html",
-            output_options = list(
-              mathjax = NULL, 
-              includes = list(in_header = "${inHeader}")
-            )
-          )'
-          mv ./index.html $out/index.html
+          ln -s ${pkgs.seelies.reveal-js} $out/assets/reveal.js
+
+          ${renv}/bin/Rscript -e 'knitr::knit(
+            input = "slides.Rmd",
+            output = "slides.md"
+          )
+
+          cp ./slides.md $out/slides.md
+          pandoc -s slides.md -o $out/index.html --to=revealjs ${builtins.concatStringsSep " " pandocArgs}
         '' + builtins.concatStringsSep "\n" (builtins.map (folder: "ln -s ${folder} $out/${builtins.baseNameOf folder}") additonalFolders);
 
       meta = {

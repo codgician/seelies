@@ -3,17 +3,26 @@ author: [ codgician ]
 title: 'Introducing Nix'
 subtitle: Declarative builds and deployments
 date: 2024.05.20
-output:
-  revealjs::revealjs_presentation:
-    theme: black
-    highlight: pygments
-    transition: fade
-    background_transition: slide
-    center: true
-    reveal_options:
-      width: 1280
-      height: 720
 ---
+
+# Test mermaid
+
+```{r, echo=FALSE}
+library(DiagrammeR)
+mermaid(diagram = '
+sequenceDiagram
+  participant Alice
+  participant Bob
+  Alice->>John: Hello John, how are you?
+  loop Healthcheck
+      John->>John: Fight against hypochondria
+  end
+  Note right of John: Rational thoughts<br/>prevail...
+  John-->>Alice: Great!
+  John->>Bob: How about you?
+  Bob-->>John: Jolly good!
+')
+```
 
 # Software deployment
 
