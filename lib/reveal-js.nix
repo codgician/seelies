@@ -19,10 +19,11 @@
       pname = name;
       inherit version src;
 
+      buildInputs = with pkgs; [ pandoc graphviz ];
       installPhase =
         let
-          mdPath = "${src}/slides.md";
-          args = builtins.concatStringsSep " " ([
+          luaFiltersPath = "${pkgs.pandoc-lua-filters}/share/pandoc/filters";
+          pandocArgs = builtins.concatStringsSep " " ([
             # Use reveal.js from input
             "--variable"
             "revealjs-url=./assets/reveal.js"
@@ -33,15 +34,20 @@
             # Code highlight theme
             "--highlight-style=zenburn"
 
+            # Set slide level
             "--slide-level ${builtins.toString slideLevel}"
+
+            # Add Lua filters
+            "--lua-filter"
+            "${luaFiltersPath}/diagram-generator.lua"
           ] ++ builtins.attrValues (builtins.mapAttrs (k: v: "-V ${k}=${builtins.toString v}") pandocVariables));
         in
         ''
           mkdir -p $out/assets
           ln -s ${reveal-js} $out/assets/reveal.js
           ln -s ${pkgs.nodePackages.katex}/lib/node_modules/katex/dist $out/assets/katex-dist
-          ${pkgs.pandoc}/bin/pandoc -s -t revealjs -o $out/index.html ${mdPath} ${args}
-        '' + builtins.concatStringsSep "\n" (builtins.map (folder: "ln -s ${folder} $out/${builtins.baseNameOf folder}") additonalFolders);
+          ${pkgs.pandoc}/bin/pandoc --embed-resources -s -t revealjs -o $out/index.html slides.md ${pandocArgs}
+        '' + builtins.concatStringsSep "\n" (builtins.map (dir: "ln -s ${dir} $out/${builtins.baseNameOf dir}") additonalFolders);
 
       meta = {
         inherit license;

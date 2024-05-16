@@ -6,7 +6,7 @@
       concatAttrs = attrList: builtins.foldl' (x: y: x // y) { } attrList;
     in
     concatAttrs [
-      (import ./revealjs.nix)
+      (import ./reveal-js.nix)
       (import ./filesystem.nix { inherit lib; })
       (import ./misc.nix { inherit lib; })
       (import ./site.nix)
