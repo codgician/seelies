@@ -1,14 +1,14 @@
-{ nixpkgs, ... }:
-let
-  lib = nixpkgs.lib;
-  concatAttrs = attrList: builtins.foldl' (x: y: x // y) { } attrList;
-in
-rec {
+{ nixpkgs, ... }: rec {
   # Put all custom library functions under "seelie" namespace
-  seelies = concatAttrs [
-    (import ./revealjs.nix)
-    (import ./filesystem.nix { inherit lib; })
-    (import ./misc.nix { inherit lib; })
-    (import ./site.nix)
-  ];
+  seelies =
+    let
+      lib = nixpkgs.lib // { inherit seelies; };
+      concatAttrs = attrList: builtins.foldl' (x: y: x // y) { } attrList;
+    in
+    concatAttrs [
+      (import ./revealjs.nix)
+      (import ./filesystem.nix { inherit lib; })
+      (import ./misc.nix { inherit lib; })
+      (import ./site.nix)
+    ];
 }

@@ -14,8 +14,8 @@ lib.seelies.mkRevealJs {
   pandocVariables = {
     menu = true;
     theme = "black";
-    width = 1366;
-    height = 768;
+    width = 1280;
+    height = 720;
   };
 
   additonalFolders = [ ./images ];

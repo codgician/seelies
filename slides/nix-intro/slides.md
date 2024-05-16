@@ -152,7 +152,7 @@ Implement pseudo-solvers, e.g. rpm, apt, etc.
 
 ::: { .incremental }
 
-- Two components dependeing different versions of the same package?
+- Two components depending different versions of the same package?
 - Two components providing file to the same path?
 - Two components may interfere with others in the case of incomplete dependencies and inexact notions of component compatibility.
 
@@ -175,6 +175,12 @@ Let's solve all issues with a **systematic** approach.
 Introducing [The Purely Functional Software Deployment Model](https://edolstra.github.io/pubs/phd-thesis.pdf),
 
 and one of its implementation, Nix.
+
+::: { style="justify-content: center" }
+```bash
+curl https://nixos.org/nix/install | sh
+```
+:::
 
 ::: { .notes }
 
@@ -209,9 +215,34 @@ $$
 :::
 :::
 
-## Dealing side-effects
+## Why pure function?
+
+::: { .incremental }
+
+- Reproducible.
+  * The same inputs always yield the same output.
+- No side-effects.
+  * Calculation of one function never interfere other functions.
+- Cachable.
+  * Safe to cache computed results.
+
+:::
+
+## But how?
+
+::: { .incremental }
+
+- Require explicit dependency declaration.
+- Ensure by building in a *clean* sandbox.
+- In Nix, we call the smallest unit of compliation as *derivation*.
+- A *derivation* is written in a functional programming language, also named Nix.
+
+:::
 
 ## Derivation
+
+```nix
+```
 
 ## Nix Store
 

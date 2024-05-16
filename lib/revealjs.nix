@@ -24,10 +24,14 @@
           mdPath = "${src}/slides.md";
           args = builtins.concatStringsSep " " ([
             # Use reveal.js from input
-            "-V revealjs-url=./assets/reveal.js"
+            "--variable"
+            "revealjs-url=./assets/reveal.js"
 
             # Use katex from nixpkgs
             (lib.optionals katex "--katex=./assets/katex-dist/")
+
+            # Code highlight theme
+            "--highlight-style=zenburn"
 
             "--slide-level ${builtins.toString slideLevel}"
           ] ++ builtins.attrValues (builtins.mapAttrs (k: v: "-V ${k}=${builtins.toString v}") pandocVariables));
