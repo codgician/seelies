@@ -3,25 +3,51 @@ author: [ codgician ]
 title: 'Introducing Nix'
 subtitle: Declarative builds and deployments
 date: 2024.05.20
+always_allow_html: yes
 ---
 
-# Test mermaid
+# Test grViz
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message = FALSE, warnings = FALSE, results = "asis"}
+
 library(DiagrammeR)
-mermaid(diagram = '
-sequenceDiagram
-  participant Alice
-  participant Bob
-  Alice->>John: Hello John, how are you?
-  loop Healthcheck
-      John->>John: Fight against hypochondria
-  end
-  Note right of John: Rational thoughts<br/>prevail...
-  John-->>Alice: Great!
-  John->>Bob: How about you?
-  Bob-->>John: Jolly good!
-')
+library(DiagrammeRsvg)
+library(magrittr)
+library(htmltools)
+
+DiagrammeR::grViz('
+  digraph G {
+    subgraph cluster_0 {
+      style=filled
+      color=lightgrey
+      node [style=filled,color=white]
+      a0 -> a1 -> a2 -> a3
+      label = "process 1"
+    }
+
+    subgraph cluster_1 {
+      node [style=filled]
+      b0 -> b1 -> b2 -> b3
+      label = "process 2"
+      color=blue
+    }
+
+    start -> a0
+    start -> b0
+    a1 -> b3
+    b2 -> a3
+    a3 -> a0
+    a3 -> end
+    b3 -> end
+
+    start [shape=Mdiamond]
+    end [shape=Msquare]
+  }
+', height = 500) %>% 
+   export_svg() %>%
+   htmltools::HTML() %>%
+   gsub("<!DOCTYPE.*?>", "", .) %>%
+   print()
 ```
 
 # Software deployment

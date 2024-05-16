@@ -8,7 +8,7 @@ lib.seelies.mkRevealJs {
   version = "2024.05.15-1";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;
-  
+
   katex = true;
   slideLevel = 2;
   pandocVariables = {

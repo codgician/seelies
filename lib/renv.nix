@@ -3,10 +3,12 @@
   mkREnv = pkgs: pkgs.rWrapper.override {
     packages = with pkgs.rPackages; [
       rmarkdown
-      diagram
       extrafont
       katex
       DiagrammeR
+      DiagrammeRsvg
+      magrittr
+      htmltools
     ];
   };
 }

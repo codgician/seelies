@@ -17,7 +17,7 @@
     pkgs.stdenv.mkDerivation rec {
       pname = name;
       inherit version src;
-
+      
       buildInputs = with pkgs; [ pandoc ];
       installPhase =
         let
@@ -36,12 +36,6 @@
             # Set slide levelnix
             "--slide-level ${builtins.toString slideLevel}"
 
-            # Add RMarkdown lua filters
-            # "--lua-filter" 
-            # "${pkgs.rPackages.rmarkdown}/library/rmarkdown/rmarkdown/lua/pagebreak.lua"
-            # "--lua-filter"
-            # "${pkgs.rPackages.rmarkdown}/library/rmarkdown/rmarkdown/lua/latex-div.lua"
-
           ] ++ builtins.concatLists (builtins.attrValues (lib.mapAttrs (k: v: [ "--variable" "${k}=${builtins.toString v}" ]) pandocVariables));
         in
         ''
@@ -49,10 +43,7 @@
           ln -s ${pkgs.nodePackages.katex}/lib/node_modules/katex/dist $out/assets/katex-dist
           ln -s ${pkgs.seelies.reveal-js} $out/assets/reveal.js
 
-          ${renv}/bin/Rscript -e 'knitr::knit(
-            input = "slides.Rmd",
-            output = "slides.md"
-          )
+          ${renv}/bin/Rscript -e 'knitr::knit(input = "slides.Rmd", output = "slides.md")'
 
           cp ./slides.md $out/slides.md
           pandoc -s slides.md -o $out/index.html --to=revealjs ${builtins.concatStringsSep " " pandocArgs}

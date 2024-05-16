@@ -39,5 +39,9 @@ nix run .#repl
 
 ## Details
 
-* Slides are written with [R Markdown](https://rmarkdown.rstudio.com) in file named `slides.Rmd` under `/slides` folder.
-* During build, `knitr` is first called to convert `*.Rmd` into `*.md`. Then `pandoc` is called to convert `*.md` into `*.html`.
+- Slides are written with [R Markdown](https://rmarkdown.rstudio.com) in file named `slides.Rmd` under `/slides` folder.
+- During build:
+  *  Call `rmarkdown::render()` to render `slides.Rmd` with output type being `html_document`.
+  *  However, we only take the intermediate `slides.md` and discard the resulting `slides.html`.
+  *  `slides.md` is then rendered to `index.html` using pandoc with revealjs template with custom arguments.
+  *  This resulted in highly limited R functionality.
