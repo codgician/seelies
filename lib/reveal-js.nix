@@ -2,7 +2,6 @@
   mkRevealJs =
     { pkgs
     , lib
-    , reveal-js
     , name
     , title ? name
     , description ? null
@@ -15,6 +14,29 @@
     , additonalFolders ? [ ]
     }:
 
+    let
+      inHeader = pkgs.writeTextFile {
+        name = "katex-header.html";
+        text = lib.optionals katex ''
+          <script defer="" src="./assets/katex-dist/katex.min.js"></script>
+          <script>document.addEventListener("DOMContentLoaded", function () {
+            var mathElements = document.getElementsByClassName("math");
+            var macros = [];
+            for (var i = 0; i < mathElements.length; i++) {
+              var texText = mathElements[i].firstChild;
+              if (mathElements[i].tagName == "SPAN") {
+              katex.render(texText.data, mathElements[i], {
+                displayMode: mathElements[i].classList.contains('display'),
+                throwOnError: false,
+                macros: macros,
+                fleqn: false
+              });
+            }}});
+          </script>
+          <link rel="stylesheet" href="./assets/katex-dist/katex.min.css" />
+        '';
+      };
+    in
     pkgs.stdenv.mkDerivation rec {
       pname = name;
       inherit version src;
@@ -27,7 +49,6 @@
           };
           rmdPath = "${src}/slides.Rmd";
           pandocArgs = [
-
             # Use katex from nixpkgs
             (lib.optionals katex "--katex=./assets/katex-dist/")
 
@@ -36,13 +57,17 @@
         in
         ''
           mkdir -p $out/assets
-          ln -s ${reveal-js} $out/assets/reveal.js
           ln -s ${pkgs.nodePackages.katex}/lib/node_modules/katex/dist $out/assets/katex-dist
           ${renv}/bin/Rscript -e 'rmarkdown::render(
             input = "slides.Rmd", 
             output_format = "revealjs::revealjs_presentation", 
             output_file = "index.html",
-            output_options = list(mathjax = NULL, pandoc_args = c(${pandocArgsInR}))
+            output_options = list(
+              mathjax = NULL, 
+              includes = list(in_header = "${inHeader}"), 
+              theme = "black",
+              pandoc_args = c(${pandocArgsInR})
+            )
           )'
           mv ./index.html $out/index.html
         '' + builtins.concatStringsSep "\n" (builtins.map (folder: "ln -s ${folder} $out/${builtins.baseNameOf folder}") additonalFolders);

@@ -6,7 +6,7 @@ in
 rec {
   # Put all custom library functions under "seelie" namespace
   seelies = concatAttrs [
-    (import ./revealjs.nix)
+    (import ./reveal-js.nix)
     (import ./filesystem.nix { inherit lib; })
     (import ./misc.nix { inherit lib; })
     (import ./site.nix)

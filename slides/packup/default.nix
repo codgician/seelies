@@ -1,7 +1,7 @@
-{ pkgs, lib, reveal-js }:
+{ pkgs, lib, ... }:
 
 lib.seelies.mkRevealJs {
-  inherit pkgs lib reveal-js;
+  inherit pkgs lib;
 
   name = "packup";
   title = "Package Upgradability: the algorithm behind packup";

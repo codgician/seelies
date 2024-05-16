@@ -4,17 +4,12 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     flake-utils.url = "github:numtide/flake-utils";
-    reveal-js = {
-      url = "github:hakimel/reveal.js";
-      flake = false;
-    };
   };
 
   outputs =
     inputs @ { self
     , nixpkgs
     , flake-utils
-    , reveal-js
     , ...
     }: flake-utils.lib.eachDefaultSystem (system:
     let
@@ -24,7 +19,7 @@
         config.allowUnfree = true;
       };
       slides = lib.seelies.getFolderNames ./slides;
-      mkSlidePkg = name: import ./slides/${name} { inherit lib pkgs reveal-js; };
+      mkSlidePkg = name: import ./slides/${name} { inherit lib pkgs; };
       mkSlideApp = slidePkg: inputs.flake-utils.lib.mkApp {
         drv = pkgs.writeShellScriptBin slidePkg.pname ''
           echo "Serving slides at: http://localhost:8000"
