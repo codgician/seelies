@@ -148,7 +148,7 @@ Splitting monolithic architecture can never be fine-grained, because its motavat
 
 :::
 
-## Idea #2. Package manager
+## Idea #2. Global package manager
 
 ::: { .incremental }
 - Each component provide a set of constraints:
@@ -173,23 +173,30 @@ Implement pseudo-solvers, e.g. rpm, apt, etc.
 
 ---
 
-*But most implementations install components in global namespace...*
+*But it mutates global system state...*
 
-::: { .incremental }
+::: { .fragment .fade-in-then-semi-out }
 
-- Two components depending different versions of the same package?
-- Two components providing file to the same path?
-- Two components may interfere with others in the case of incomplete dependencies and inexact notions of component compatibility.
+Two components may:
+
+- depend on different versions of the same package?
+- provide files om the same path?
+- interfere with others in the case of incomplete dependencies and inexact notions of component compatibility.
 
 :::
 
----
+::: { .fragment }
 
-::: { .incremental }
+And upgrading is **destructive**:
 
-- Desctrucitive upgrading: 
-  * Upgrades are not atomic.
-  * Files are overwritten, making rollback non-trivial.
+- Upgrades are not atomic.
+- Files are overwritten, making rollback non-trivial.
+
+:::
+
+::: { .notes }
+
+There are some possible solutions, but usually painful to use in practice: [Debian Alternatives System](https://wiki.debian.org/DebianAlternatives). Also virtualenv for python, rustup for rust, etc.
 
 :::
 
@@ -197,12 +204,13 @@ Implement pseudo-solvers, e.g. rpm, apt, etc.
 
 Let's solve all issues with a **systematic** approach.
 
-Introducing [The Purely Functional Software Deployment Model](https://edolstra.github.io/pubs/phd-thesis.pdf),
+Introducing [The Purely Functional Software Deployment Model](https://edolstra.github.io/pubs/phd-thesis.pdf) (2006),
 
-and one of its implementation, Nix.
+and one of its implementation, Nix, achieving decalrative builds & deployments.
 
 ::: { style="justify-content: center" }
 ```bash
+# Works for any Linux distribution and macOS
 curl https://nixos.org/nix/install | sh
 ```
 :::
@@ -213,7 +221,7 @@ Nix is not the only implementation, we also have [Guix](https://guix.gnu.org/nb-
 
 :::
 
-# Nix: a build system
+# Nix
 
 *Building software is just a function.*
 
@@ -243,14 +251,14 @@ $$
 ## Why pure function?
 
 ::: { .incremental }
-
 - Reproducible.
   * The same inputs always yield the same output.
 - No side-effects.
   * Calculation of one function never interfere other functions.
-- Cachable.
-  * Safe to cache computed results.
+:::
 
+::: { .fragment }
+Safe to cache computed results.
 :::
 
 ## But how?
@@ -258,21 +266,114 @@ $$
 ::: { .incremental }
 
 - Require explicit dependency declaration.
-- Ensure by building in a *clean* sandbox.
-- In Nix, we call the smallest unit of compliation as *derivation*.
-- A *derivation* is written in a functional programming language, also named Nix.
+- Static dependency declarations (no version range).
+- Build in restricted sandboxes for enforcement.
+- Components should be stored in an isolated manner.
 
 :::
 
 ## Derivation
 
-```nix
+- In Nix, we call the smallest unit of compliation as *derivation*.
+- One *derivation* can depend on multiple *derivations*.
+- A software package is also a *derivation*.
+- A *derivation* is created in a functional programming language.
+  
+---
+
+::: { .r-stack }
+::: { .fragment .fade-out data-fragment-index="1" }
+```nix { .r-stretch .s-full-width }
+nix-repl > d = 
+	derivation { 
+		name = "mydrv"; 
+		builder = "mybuilder"; # e.g. /path/to/bash
+		args = [];
+		system = "aarch64-linux"; 
+	}
+nix-repl > d
+«derivation /nix/store/8a0bs4zf39ajcxli2ha6d0i7jrpk6nyw-mydrv.drv»
 ```
+:::
 
-## Nix Store
+::: { .fragment .r-stretch .current-visible data-fragment-index="1" }
+```json { .r-stretch .s-full-width }
+{
+  "/nix/store/8a0bs4zf39ajcxli2ha6d0i7jrpk6nyw-mydrv.drv": {
+    "args": [],
+    "builder": "mybuilder",
+    "env": {
+      "builder": "mybuilder",
+      "name": "mydrv",
+      "out": "/nix/store/xai1xp8blysxjgh0mnnkhabwbkcv2g82-mydrv",
+      "system": "aarch64-linux"
+    },
+    "inputDrvs": {},
+    "inputSrcs": [],
+    "name": "mydrv",
+    "outputs": { 
+	  "out": {
+		"path": "/nix/store/xai1xp8blysxjgh0mnnkhabwbkcv2g82-mydrv"
+      }
+	},
+    "system": "aarch64-linux"
+  }
+}
+```
+:::
+:::
+
+## Sandboxing
+
+::: { .incremental }
+
+- Isolated from normal file system hierarchy: 
+  - Builds only see dependencies.
+  - Private version of `/proc`, `/dev`, `/dev/shm` and `/dev/pts` (Linux-only).
+  - Paths configurable with `sandbox-options`.
+  - No more undeclared dependencies on files in directory, like `/usr/bin`.
+- Isolate from other processes in the system:
+  - Builds run in private PID, mount, network, IPS and UTS namespaces, etc.
+:::
+
+## Nix store
+
+Derivations are cryptographically hashed, and the results are stored in Nix Store isolatedly.
 
 
-# Nix: as package manager
+
+
+---
+
+::: { .incremental }
+
+* Prevent interference between components.
+  * Any change to the build process is reflected in the hash.
+  * Hash computed recursively (thus dependency changes included).
+  * If two component compositions differ, they occuply different paths in Nix store.
+* Allow complete identification of dependencies.
+  * Prevent use of undeclared dependencies.
+  * For runtime dependencies, dynmaic linker should fail unless handled.
+  * Nix uses a patched dynamic linker to not search in any default locations.
+
+:::
+
+::: { .notes }
+
+As seen in previous example, the cryptographic hash include:
+
+* The source of the components
+* The script that performed the build
+* Any arguments or environment variables passed to the build script
+* All build time dependencies, including compilers, linkers, libraries, standard unix tools, etc.
+
+For runtime dynamic linking:
+
+* If not handled, runtime fails because there's nothing under default search paths (e.g. `/usr/lib`).
+* A common solution in Nix world is to wrap the binary with a script and set search paths and other needed environment variables before actually executing.
+
+:::
+
 
 # NixOS
 
@@ -290,7 +391,7 @@ $$
 # References
 
 - [Dolstra, Eelco. The purely functional software deployment model. Utrecht University, 2006.](https://edolstra.github.io/pubs/phd-thesis.pdf)
-  
+- [Nix Pills](https://nixos.org/guides/nix-pills/)
 ---
 
 Slides are

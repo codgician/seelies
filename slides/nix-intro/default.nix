@@ -5,17 +5,18 @@ lib.seelies.mkRevealJs {
 
   name = "nix-intro";
   title = "Introducing Nix: declarative builds and deployments";
-  version = "2024.05.15-1";
+  version = "2024.05.17-1";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;
 
   slideLevel = 2;
   katex = true;
+  highlightStyle = "pygments";
   pandocVariables = {
     menu = true;
-    theme = "black";
-    width = 1280;
-    height = 720;
+    theme = "white";
+    width = 1366;
+    height = 768;
   };
 
   additonalFolders = [ ./images ];

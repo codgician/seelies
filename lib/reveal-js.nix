@@ -11,10 +11,16 @@
     , license ? lib.licenses.cc-by-nc-sa-40
     , slideLevel ? 2
     , katex ? false
+    , highlightStyle ? "zenburn"
     , pandocVariables ? { }
     , additonalFolders ? [ ]
     }:
 
+    let
+      stylesCss = pkgs.writeText "styles.css" ''
+        .s-full-width { width: 100% !important; }
+      '';
+    in
     pkgs.stdenv.mkDerivation rec {
       pname = name;
       inherit version src;
@@ -32,7 +38,7 @@
             (lib.optionals katex "--katex=./assets/katex-dist/")
 
             # Code highlight theme
-            "--highlight-style=zenburn"
+            "--highlight-style=${highlightStyle}"
 
             # Set slide level
             "--slide-level ${builtins.toString slideLevel}"
@@ -40,6 +46,9 @@
             # Add Lua filters
             "--lua-filter"
             "${luaFiltersPath}/diagram-generator.lua"
+
+            # Add custom css
+            "--css=${stylesCss}"
           ] ++ builtins.attrValues (builtins.mapAttrs (k: v: "-V ${k}=${builtins.toString v}") pandocVariables));
         in
         ''
