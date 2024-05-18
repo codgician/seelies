@@ -417,7 +417,7 @@ For runtime dynamic linking:
 
 ::: { .r-stack }
 
-![](https://repology.org/repositories/graphs) (2024-05-14)](./images/repology-20240514-zoomed.svg){ .fragment .fade-out data-fragment-index="0" style="max-width:80%" }
+![](./images/repology-20240514-zoomed.svg){ .fragment .fade-out data-fragment-index="0" style="max-width:80%" }
 
 ![](./images/repology-20240514.svg){ .fragment .current-visible data-fragment-index="0" style="max-width:80%" }
 
@@ -467,6 +467,7 @@ Garbage collection.
 *A working system = Software + Configurations*
 
 ::: { .fragment }
+
 [Filesystem Hierarchy Standard](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
 
 ```
