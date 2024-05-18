@@ -59,7 +59,7 @@ digraph finite_state_machine {
 
 ### Environment issues
 
-::: { .fragment  .fade-in-then-semi-out }
+::: { .incremental }
 - Software today is almost **never self-contained**.
 - Dependencies, both build time and run time, needs to be **compatible**. 
 - Components need to be able to **find** dependencies. 
@@ -79,12 +79,16 @@ digraph finite_state_machine {
 
 ### Manageability issues
 
+::: { .incremental }
+
 - **Uninstall / Upgrade**: should not induce failures to another part of the system (e.g. *[DLL hell](https://en.wikipedia.org/wiki/DLL_Hell)*).
 - **Administrator queries**: file ownership? disk space consumption? source?
 - **Rollbacks**: able to undo effects of upgrades.
 - **Variability**: build / deployment configurations may differ.
 - **Maintenance**: may have different policies for keeping software up-to-date.
 - ... and they scale for a **huge** fleet of machines with **different SKUs**.
+
+:::
 
 ::: { .notes }
 
@@ -120,31 +124,31 @@ Bundle everything to increase reproducibility at runtime.
 ::: { .incremental }
 - Split build & deployment into *stages* (workflows).
 - Manage dependencies between *stages*.
-- e.g. GitHub actions, Ansible,  etc.
+- e.g. GitHub actions, Ansible, etc.
+:::
+
+::: { .fragment }
+*An ad hoc solution*.
+:::
+
+::: { .fragment}
+*And we sacrifice sharing between components.*
+:::
+
+::: { .incremental }
+- Split into layers and share common bases.
+- Fetch files on-demand? (e.g. Zero Install System).
+- But still, these are done in a coarse-grained manner.
 :::
 
 ::: { .notes }
 
 Monolithic only solves running the software in a reproducible manner.
-Building and deploying monolithic software could still be complex.
 
-:::
+Building and deploying monolithic software could still be complex: At least you need to build the container, and think of Dockerfile.
 
----
-
-*Aren't we wasting storage spaces?*
-
-::: { .incremental }
-- Split into layers and share common bases.
-- Fetch files on-demand? (e.g. Zero Install System).
-- Storage today is getting cheaper anyway...
-:::
-
-::: { .notes }
-
-If we habe $N$ apps having $M$ same dependencies, the storage complexity becomes $\mathcal{O}(NM)$ instead of $\mathcal{O}(N + M)$.
-
-Splitting monolithic architecture can never be fine-grained, because its motavation is to prevent management complexity. The more you split, the more you lose benefits of monolithic architecture.
+Splitting monolithic architecture can never be fine-grained, because its motavation is to prevent management complexity. 
+The more you split, the more you lose benefits of monolithic architecture.
 
 :::
 
@@ -167,7 +171,7 @@ Implement pseudo-solvers, e.g. rpm, apt, etc.
 
 ::: { .notes }
 
-* Package management is especially critical to UNIX systems because they traditionally insist placing packages in global namespaces, following [Filesystem Hierarchy Standard](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard).
+* Package management is especially critical to UNIX systems because they traditionally insist placing packages in global namespaces.
 
 :::
 
@@ -177,11 +181,9 @@ Implement pseudo-solvers, e.g. rpm, apt, etc.
 
 ::: { .fragment .fade-in-then-semi-out }
 
-Two components may:
-
-- depend on different versions of the same package?
-- provide files om the same path?
-- interfere with others in the case of incomplete dependencies and inexact notions of component compatibility.
+- Depend on different versions of the same package?
+- Provide files om the same path?
+- Interfere with others in the case of incomplete dependencies and inexact notions of component compatibility.
 
 :::
 
@@ -202,11 +204,30 @@ There are some possible solutions, but usually painful to use in practice: [Debi
 
 ## Idea #3? 
 
-Let's solve all issues with a **systematic** approach.
+*Can we marry isolation with fine-grained package management?*
 
-Introducing [The Purely Functional Software Deployment Model](https://edolstra.github.io/pubs/phd-thesis.pdf) (2006),
+::: { .fragment }
 
-and one of its implementation, Nix, achieving decalrative builds & deployments.
+Store in an isolated paths instead of global path.
+
+:::
+
+::: { .fragment }
+
+::: { .incremental }
+
+- Share common dependencies without duplicating them on disk.
+- Components with conflicting dependencies co-exists and runs.
+- Make both build and deployment deterministic and reproducible.
+
+:::
+:::
+
+# Nix
+
+originating from [The Purely Functional Software Deployment Model](https://edolstra.github.io/pubs/phd-thesis.pdf) (2006),
+
+achieving decalrative builds & deployments.
 
 ::: { style="justify-content: center" }
 ```bash
@@ -221,7 +242,7 @@ Nix is not the only implementation, we also have [Guix](https://guix.gnu.org/nb-
 
 :::
 
-# Nix
+# Nix: build system
 
 *Building software is just a function.*
 
@@ -296,30 +317,43 @@ nix-repl > d
 ```
 :::
 
-::: { .fragment .r-stretch .current-visible data-fragment-index="1" }
+::: { .fragment .r-stretch .fade-in-then-out data-fragment-index="1" }
 ```json { .r-stretch .s-full-width }
 {
-  "/nix/store/8a0bs4zf39ajcxli2ha6d0i7jrpk6nyw-mydrv.drv": {
-    "args": [],
-    "builder": "mybuilder",
-    "env": {
-      "builder": "mybuilder",
-      "name": "mydrv",
-      "out": "/nix/store/xai1xp8blysxjgh0mnnkhabwbkcv2g82-mydrv",
-      "system": "aarch64-linux"
-    },
-    "inputDrvs": {},
-    "inputSrcs": [],
-    "name": "mydrv",
-    "outputs": { 
-	  "out": {
-		"path": "/nix/store/xai1xp8blysxjgh0mnnkhabwbkcv2g82-mydrv"
-      }
+	"args": [],
+	"builder": "mybuilder",
+	"env": {
+		"builder": "mybuilder",
+		"name": "mydrv",
+		"out": "/nix/store/xai1xp8blysxjgh0mnnkhabwbkcv2g82-mydrv",
+		"system": "aarch64-linux"
 	},
-    "system": "aarch64-linux"
-  }
+	"inputDrvs": {},
+	"inputSrcs": [],
+	"name": "mydrv",
+	"outputs": { 
+		"out": {
+		"path": "/nix/store/xai1xp8blysxjgh0mnnkhabwbkcv2g82-mydrv"
+		}
+	},
+	"system": "aarch64-linux"
 }
 ```
+:::
+
+::: { .fragment .r-stretch .current-visible data-fragment-index="2" }
+*Of course, not all files are built*
+
+```nix { .r-stretch .s-full-width }
+derivation { 
+	name = "myfile"; 
+	builder = "none";
+	system = "aarch64-linux"; 
+	outputHash = "xai1xp8blysxjgh0mnnkhabwbkcv2g82";
+}
+```
+File hash will be evaluated and checked against during nix-build.
+
 :::
 :::
 
@@ -333,17 +367,11 @@ nix-repl > d
   - Paths configurable with `sandbox-options`.
   - No more undeclared dependencies on files in directory, like `/usr/bin`.
 - Isolate from other processes in the system:
-  - Builds run in private PID, mount, network, IPS and UTS namespaces, etc.
+  - Builds run in private PID, mount, IPS and UTS namespaces, etc.
+  - Builds run without network access (you have to explictly tell Nix what files to fetch before build).
 :::
 
 ## Nix store
-
-Derivations are cryptographically hashed, and the results are stored in Nix Store isolatedly.
-
-
-
-
----
 
 ::: { .incremental }
 
@@ -370,28 +398,102 @@ As seen in previous example, the cryptographic hash include:
 For runtime dynamic linking:
 
 * If not handled, runtime fails because there's nothing under default search paths (e.g. `/usr/lib`).
-* A common solution in Nix world is to wrap the binary with a script and set search paths and other needed environment variables before actually executing.
+* A common solution in Nix world is to wrap the binary with a script and set search paths and other needed environment variables before actually executing (e.g. `LD_LIBRARY_PATH`).
 
 :::
 
+---
 
-# NixOS
+![An example of runtime dependency finding](./images/nix-store-example.svg){ .r-stretch }
 
+## [NixPkgs](https://github.com/nixos/nixpkgs)
+
+*There are so many languages and frameworks*
+
+- Unite the efforts in building software.
+- Nixpkgs provides not only compiler toolchains, but also infrastructure for packaging applications written in various language and frameworks.
 
 ---
 
 ::: { .r-stack }
 
-![[Repository size/freshness map](https://repology.org/repositories/graphs) (2024-05-14)](./images/repology-20240514-zoomed.svg){ .fragment .fade-out data-fragment-index="0" style="max-width:80%" }
+![](https://repology.org/repositories/graphs) (2024-05-14)](./images/repology-20240514-zoomed.svg){ .fragment .fade-out data-fragment-index="0" style="max-width:80%" }
 
-![[Repository size/freshness map](https://repology.org/repositories/graphs) (2024-05-14)](./images/repology-20240514.svg){ .fragment .current-visible data-fragment-index="0" style="max-width:80%" }
+![](./images/repology-20240514.svg){ .fragment .current-visible data-fragment-index="0" style="max-width:80%" }
 
 :::
+
+::: { .notes }
+
+Source: https://repology.org/repositories/graphs (2024-05-14)
+
+:::
+
+---
+
+::: { .fragment .semi-fade-out }
+Take [rust-analyzer](https://github.com/NixOS/nixpkgs/blob/9a50b221e403694b0cc824fc4600ab5930f3090c/pkgs/development/tools/rust/rust-analyzer/default.nix) as a real-life example.
+:::
+
+::: { .fragment .current-visible }
+::: { .incremental }
+- But I don't want to build software every time...
+- Binary cache!
+:::
+:::
+
+# Nix: package manager
+
+- Build time dependencies are explictly specified.
+- Runtime dependencies *automatically* recognized.
+
+
+## Installation
+
+
+## Removal
+
+Garbage collection.
+
+## Advantages
+
+- No SAT solver.
+- Different versions / variants of the same package can be installed together.
+- Zero assumption about system global state.
+- Atomic installs / upgrades.
+
+# NixOS
+
+*A working system = Software + Configurations*
+
+::: { .fragment }
+[Filesystem Hierarchy Standard](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
+
+```
+/
+├── bin
+├── etc
+├── lib
+├── usr
+│  ├── bin
+│  ├── include
+│  ├── lib
+│  └── share
+```
+:::
+
+---
+
+*Why separate packages and configurations?*
+
+---
 
 # References
 
 - [Dolstra, Eelco. The purely functional software deployment model. Utrecht University, 2006.](https://edolstra.github.io/pubs/phd-thesis.pdf)
 - [Nix Pills](https://nixos.org/guides/nix-pills/)
+- [Nix: from a build system to an ansible replacement (TUNA)](https://mirrors.tuna.tsinghua.edu.cn/tuna/tunight/2021-05-29-nix/slides.pdf)
+  
 ---
 
 Slides are
