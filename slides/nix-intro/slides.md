@@ -5,31 +5,6 @@ subtitle: Declarative builds and deployments
 date: 2024.05.20
 ---
 
-# Test GraphViz
-
-```{ .graphviz caption="This is an image, created by **Graphviz**'s dot." }
-digraph finite_state_machine {
-	rankdir=LR;
-	size="8,5"
-	node [shape = doublecircle]; LR_0 LR_3 LR_4 LR_8;
-	node [shape = circle];
-	LR_0 -> LR_2 [ label = "SS(B)" ];
-	LR_0 -> LR_1 [ label = "SS(S)" ];
-	LR_1 -> LR_3 [ label = "S($end)" ];
-	LR_2 -> LR_6 [ label = "SS(b)" ];
-	LR_2 -> LR_5 [ label = "SS(a)" ];
-	LR_2 -> LR_4 [ label = "S(A)" ];
-	LR_5 -> LR_7 [ label = "S(b)" ];
-	LR_5 -> LR_5 [ label = "S(a)" ];
-	LR_6 -> LR_6 [ label = "S(b)" ];
-	LR_6 -> LR_5 [ label = "S(a)" ];
-	LR_7 -> LR_8 [ label = "S(b)" ];
-	LR_7 -> LR_5 [ label = "S(a)" ];
-	LR_8 -> LR_6 [ label = "S(b)" ];
-	LR_8 -> LR_5 [ label = "S(a)" ];
-}
-```
-
 # Software deployment
 
 ::: { .incremental }
@@ -431,47 +406,121 @@ Source: https://repology.org/repositories/graphs (2024-05-14)
 
 ---
 
-::: { .fragment .semi-fade-out }
 Take [rust-analyzer](https://github.com/NixOS/nixpkgs/blob/9a50b221e403694b0cc824fc4600ab5930f3090c/pkgs/development/tools/rust/rust-analyzer/default.nix) as a real-life example.
-:::
 
-::: { .fragment .current-visible }
 ::: { .incremental }
 - But I don't want to build software every time...
 - Binary cache!
 :::
+
+---
+
+*What about runtime dependencies?*
+
+::: { .incremental }
+
+- Nix automatically recognize runtime dependencies.
+  - Serialize the store paths (output paths) into Nix ARchive (NAR).
+  - Search for references to other store paths within it.
+  - **How can this even work?** It just works.
+- Search references recursively, and form a *closure* of package to install.
+
+:::
+
+::: { .notes }
+
+*Won't this include unnecessary dependencies?*
+
+- Yes, because Nix's stdenv linker adds `-rpath` flag for every library directory mentioned through -L flags.
+- Why? Because it needs to ensure every produced binary is statically composed.
+- However we don't know in advance if this library is actually used by the linker. May cause retained but unnecessary dependencies.
+- Add an additional "fixup" stage in the builder at the end.
+- Use [patchelf](https://github.com/nixos/patchelf) to shrink rpath.
+  ```bash
+  find $out -type f -exec patchelf --shrink-rpath '{}' \; -exec strip '{}' \; 2>/dev/null
+  ```
 :::
 
 # Nix: package manager
 
-- Build time dependencies are explictly specified.
-- Runtime dependencies *automatically* recognized.
+For each package:
 
+* Build time dependencies explictly specified.
+* Runtime dependencies automatically recognized.
+
+::: { .fragment }
+
+Form a *closure*: containing itself and all its dependencies
+by searching for references recursively.
+
+:::
 
 ## Installation
 
+::: { .fragment .semi-fade-out data-fragment-index="1" }
+
+Two possibilities:
+
+- The closure is already in store or binary cache
+- It has to be built fresh
+
+:::
+
+::: { .fragment data-fragment-index="1" }
+*How to make the package accessible?*
+:::
+
+::: { .fragment }
+- *Activation script*: an idempotent script making whatever in nix store visible.
+- e.g. symlink all packages to `/usr/bin/`.
+- Executed while initializing profile.
+:::
 
 ## Removal
 
 Garbage collection.
 
+::: { .incremental }
+- Register it as gcroot when installing a derivation.
+- Deregister after uninstalling.
+- Periodically, enumerate all reachable store paths from the gcroots, and remove all unreachable paths. 
+  ```bash
+  $ nix-collect-garbage
+  ```
+:::
+
 ## Advantages
 
+::: { .incremental }
 - No SAT solver.
 - Different versions / variants of the same package can be installed together.
 - Zero assumption about system global state.
 - Atomic installs / upgrades.
+:::
+
 
 # NixOS
 
+::: { .fragment .semi-fade-out data-fragment-index="1" }
 *A working system = Software + Configurations*
+:::
 
-::: { .fragment }
+::: { .fragment data-fragment-index="1"  }
+*Why separate packages and configurations?*
 
+NixOS leverages Nix to manage both altogether.
+:::
+
+---
+
+::: { .r-stack }
+
+::: { .fragment .fade-out data-fragment-index="1" }
 [Filesystem Hierarchy Standard](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
 
 ```
 /
+├── boot
 ├── bin
 ├── etc
 ├── lib
@@ -483,17 +532,96 @@ Garbage collection.
 ```
 :::
 
+::: { .fragment data-fragment-index="1" }
+
+*However, in NixOS ...*
+
+```{ .r-stretch }
+/
+├── boot
+├── nix
+│  ├── store
+│  │  ├── acr...kl-nixos-system-...
+│  │  ├── 11w...cv-nixos-system-...
+│  │  │  ├── activate
+│  │  │  ├── kernel -> /nix/store/bcd...3h-linux-6.6.30/bzImage
+│  │  │  ├── systemd -> /nix/store/9cx...8s-systemd-255.4
+│  │  │  ├── ...
+│  │  ├── bcd...3h-linux-6.6.30
+│  │  ├── 9cx...8s-systemd-255.4
+│  │  ├── ...
+│  ├── var/nix/profiles
+│  │  ├── system -> system-250-link
+│  │  ├── system-249-link -> /nix/store/acr...kl-nixos-system-...
+│  │  ├── system-250-link -> /nix/store/11w...cv-nixos-system-...
+```
+
+- *Activation script*: `/nix/var/nix/profiles/system/activate`
+
+:::
+:::
+
 ---
 
-*Why separate packages and configurations?*
+*Declaratively describe your system in Nix*:
+
+```nix { .r-stretch }
+{ config, lib, pkgs, ...}: {
+	# Use systemd-boot EFI bootloader
+	boot.loader.systemd-boot.enable = true;
+	# Kernel configurations
+	boot.supportedFilesystems = [ "bcachefs" ];
+	boot.initrd.availableKernelModules = [ "xhci_pci" "sr_mod" ];
+  	boot.kernelPackages = pkgs.linuxPackages_latest;
+	# Use zsh for shell
+ 	programs.zsh.enable = true; 
+	programs.zsh.enableCompletion = true;
+	# Enable the OpenSSH daemon.
+  	services.openssh.enable = true;
+	# Configure users
+	users.users.codgi = {
+		name = "codgician";
+		home = "/home/codgi";
+		shell = pkgs.zsh;
+		openssh.authorizedKeys.keys = [ "..." ];
+	};
+}
+```
 
 ---
 
-# References
+- Nixpkgs also provide configuration modules, [search here](https://search.nixos.org/options?).
+- How I manage my devices: [github:codgician/serenitea-pot](https://github.com/codgician/serenitea-pot).
+- Demo.
+
+---
+
+> The power of NixOS roots in the Nix language.
+
+- Validate configurations before deployment.
+- Reference values accross modules of configurations.
+- Effeciently reuse configurations.
+- Unified language interface for any system component.
+
+# Ending
+
+todo...
+
+## References
 
 - [Dolstra, Eelco. The purely functional software deployment model. Utrecht University, 2006.](https://edolstra.github.io/pubs/phd-thesis.pdf)
 - [Nix Pills](https://nixos.org/guides/nix-pills/)
 - [Nix: from a build system to an ansible replacement (TUNA)](https://mirrors.tuna.tsinghua.edu.cn/tuna/tunight/2021-05-29-nix/slides.pdf)
+
+---
+
+To get started, or learn further about Nix:
+
+- Official website: [nixos.org](https://nixos.org)
+- Nix docs: [nix.dev](https://nix.dev)
+- NixOS wiki: [wiki.nixos.org](https://wiki.nixos.org)
+- Search packages / configurations: [search.nixos.org](https://search.nixos.org)
+- Search for functions in nix (lang): [noogle.dev](https://noogle.dev)
   
 ---
 
