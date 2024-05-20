@@ -755,6 +755,8 @@ NixOS leverages Nix to manage both altogether.
 }
 ```
 
+---
+
 - Nixpkgs also provide configuration modules, [search here](https://search.nixos.org/options?).
 - How I manage my devices: [github:codgician/serenitea-pot](https://github.com/codgician/serenitea-pot).
 - Demo.
