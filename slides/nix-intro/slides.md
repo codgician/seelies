@@ -76,7 +76,7 @@ Blood pressure rising? That's what we are dealing with on a daily basis :P
 :::
 
 ::: { .fragment .fade-in style="color:red" }
-SAT problem (NP-complete).
+[B-SAT](https://en.wikipedia.org/wiki/Boolean_satisfiability_problem) problem (NP-complete).
 
 :::
 
@@ -107,12 +107,23 @@ Implement pseudo-solvers.
 
 ::: { .incremental }
 - Environment issues? 
-  - Resolving dependency is hard, why not **bundle everything**?
+  - Resolving undeterministic dependency is hard.
+  - Why not **bundle everything**?
 - Managability issues? 
   - **Isolation** between bundles.
   - Only load dependencies which are bundled inside.
 - Self-contained packaging: AppImage, most Windows/macOS apps, etc.
 - Containers, and virtualization based technologies.
+
+:::
+
+::: { .notes }
+
+Why do we need a SAT model for package management? It is because packages are not deterministic (e.g. they can depend on different versions of a component through upgrading).
+
+What if we make the packages deterministic? Due to the nature of globality, upgrading one package will require upgrading all other packages sharing dependencies.
+
+Fine. Then why not bundle everything altogether? 
 
 :::
 
@@ -127,16 +138,21 @@ Chunking.
 ::: { .r-stack }
 
 ::: { .fragment .fade-in-then-out }
-- Break a big software into multiple parts. 
+- Break big software into multiple parts. 
   - Inside each part, we go monolithic.
-  - Between parts, much simpler dependency management.
+  - Between parts, apply simpler dependency management.
+:::
+
+::: { .fragment .fade-in-then-out }
+- Break complex build and deployment into multiple stages.
+  - Inside each stage, we go imperative.
+  - Between xstages, we declaratively define dependencies.
 :::
 
 ::: { .fragment }
-- Break complex build and deployment into multiple stages.
-  - Inside each stage, we go imperative.
-  - Between stages, we declaratively define dependencies.
-
+- Break huge docker image into multiple layers.
+  - Inside each layer, we go imperative.
+  - Between layers, apply simpler dependency management.
 :::
 :::
 
@@ -150,19 +166,18 @@ What is chunking?
 - Partition N data into $\sqrt{N}$ chunks.
   - Use linked list between chunks, and array within each chunk.
   - $O(\sqrt{N})$ for both operations.
-  - 
 :::
 
 ---
 
 *But we sacrifice sharing between components.*
 
-How many Electrons do you have?
+- How many Electrons do you have in Windows/macOS?
+- How many Linux base images do you have in your K8s cluster?
 
 ::: { .notes }
 - There are optimizations, but coarse-grained.
 - Split into layers and share common bases.
-
 :::
 
 ## Idea #3
@@ -246,10 +261,10 @@ $$
 
 ::: { .incremental }
 
-- *Derivations* are stored in Nix Store.
-- A *derivation*'s build inputs are managed in Nix Store.
-- Building a *derivation* outputs to Nix Store.
+- *Derivations* are stored in Nix Store, and builds output to Nix Store.
+- A *derivation*'s build inputs are also managed in Nix Store.
 - Nix store paths made unique with cryptographic hash:
+
   ```
   /nix/store/zrwzkd3szh13zd3wrlzj0kdkgiv1xzjn-hello.drv
   /nix/store/rq6w0k38h7kbh2s9snwpysk5yph2fqbf-hello
@@ -273,6 +288,16 @@ Question: why output hash is different from derivation hash?
 Question: why don't we hash based on build output?
 - For caching. You want to know the hash before build to prevent rebuilding.
 
+:::
+
+## Sandboxing
+
+::: { .incremental }
+- Builds only see specified inputs, and no other files.
+  - Assume nothing in global paths like `/lib`, `/usr/bin`, etc.
+- Private version of `/proc`, `/dev`, `/dev/shm` and `/dev/pts` (Linux-only).
+  - Therefore, private PID, mount, IPS, UTS namespace, etc.
+  - No networking access during build.
 :::
 
 ---
@@ -304,12 +329,10 @@ pkgs.stdenv.mkDerivation {
   name = "hello";
   src = ./src;
 
-  buildInputs = with pkgs; [ gcc ];
-
+  nativeBuildInputs = with pkgs; [ gcc ];
   buildPhase = ''
     gcc main.c -o hello
   '';
-
   installPhase = ''
     mkdir -p $out/bin
     cp hello $out/bin
@@ -321,24 +344,23 @@ pkgs.stdenv.mkDerivation {
 ::: { .fragment .fade-in-then-out data-fragment-index="2" }
 ```json { .r-stretch .s-full-width }
 {
-  "/nix/store/zrwzkd3szh13zd3wrlzj0kdkgiv1xzjn-hello.drv": {
+  "/nix/store/87zf1q5dx3dkn597lqq17f1g83y116l6-hello.drv": {
     "args": [ "-e", "/nix/store/v6x3cs394jgqfbi0a42pam708flxaphh-default-builder.sh" ],
     "builder": "/nix/store/0c337gsdfjf3162avbkchh0yh4qbs2s3-bash-5.2-p15/bin/bash",
     "env": {
-      "buildInputs": "/nix/store/hc326d04c91h73ndqdx3qkggsk730kf2-gcc-wrapper-12.3.0",
       "buildPhase": "gcc main.c -o hello\n",
       "builder": "/nix/store/0c337gsdfjf3162avbkchh0yh4qbs2s3-bash-5.2-p15/bin/bash",
       "installPhase": "mkdir -p $out/bin\ncp hello $out/bin\n",
       "name": "hello",
-      "out": "/nix/store/rq6w0k38h7kbh2s9snwpysk5yph2fqbf-hello",
+      "nativeBuildInputs": "/nix/store/hc326d04c91h73ndqdx3qkggsk730kf2-gcc-wrapper-12.3.0",
+      "out": "/nix/store/8ygc7ks9ggj7p2q0b98w1axc3mkyi68c-hello",
       "outputs": "out",
       "src": "/nix/store/92m3yxqi2hfmj75b053zvj0kkhv9bplq-src",
       "stdenv": "/nix/store/iszb73m627pq8v3gwf7zl6xaw01ln2hj-stdenv-linux",
       "system": "aarch64-linux"
     },
-	// ... to be continued
-  }
-}
+    // to be continued...
+}}
 ```
 :::
 ::: { .fragment }
@@ -361,7 +383,7 @@ pkgs.stdenv.mkDerivation {
     ],
     "name": "hello",
     "outputs": {
-      "out": { "path": "/nix/store/rq6w0k38h7kbh2s9snwpysk5yph2fqbf-hello" }
+      "out": { "path": "/nix/store/8ygc7ks9ggj7p2q0b98w1axc3mkyi68c-hello" }
     },
     "system": "aarch64-linux"
   }
@@ -411,7 +433,8 @@ pkgs.stdenv.mkDerivation {
   name = "hello";
   src = ./src;
 
-  buildInputs = with pkgs; [ gcc ncurses ];
+  nativeBuildInputs = with pkgs; [ gcc ];
+  buildInputs = with pkgs; [ ncurses ];
   buildPhase = ''
     gcc main.c -o hello -lncurses
   '';
@@ -426,25 +449,24 @@ pkgs.stdenv.mkDerivation {
 ::: { .fragment .fade-in-then-out data-fragment-index="2" }
 ```json { .r-stretch .s-full-width }
 {
-  "/nix/store/21q37plq4mwmhhjiq54l26s897vs8mv3-hello.drv": {
+  "/nix/store/2w3jmr0s30ylyvpri0m2kb91q4c6wvcb-hello.drv": {
     "args": [ "-e", "/nix/store/v6x3cs394jgqfbi0a42pam708flxaphh-default-builder.sh" ],
     "builder": "/nix/store/0c337gsdfjf3162avbkchh0yh4qbs2s3-bash-5.2-p15/bin/bash",
     "env": {
-      "buildInputs": "/nix/store/hc326d04c91h73ndqdx3qkggsk730kf2-gcc-wrapper-12.3.0 
-	  				/nix/store/k7wlgnj0d7fp3862gy0s5s6vphkm48k1-ncurses-6.4-dev",
+      "buildInputs": "/nix/store/k7wlgnj0d7fp3862gy0s5s6vphkm48k1-ncurses-6.4-dev",
       "buildPhase": "gcc main.c -o hello -lncurses\n",
       "builder": "/nix/store/0c337gsdfjf3162avbkchh0yh4qbs2s3-bash-5.2-p15/bin/bash",
       "installPhase": "mkdir -p $out/bin\ncp hello $out/bin\n",
       "name": "hello",
-      "out": "/nix/store/59ahk43mxi8kwdir6akjgwmqvn5waaaj-hello",
-      "outputs": "out",
+      "nativeBuildInputs": "/nix/store/hc326d04c91h73ndqdx3qkggsk730kf2-gcc-wrapper-12.3.0",
+      "out": "/nix/store/rmkrazrqfy8zpk1h52qnjrj9qlcyh9mv-hello",
       "src": "/nix/store/yf2fijnfz19kqh8finky3n2rk11217r9-src",
       "stdenv": "/nix/store/iszb73m627pq8v3gwf7zl6xaw01ln2hj-stdenv-linux",
       "system": "aarch64-linux"
     },
-	// to be continued ...
 }}
 ```
+
 :::
 ::: { .fragment }
 ```json { .r-stretch .s-full-width }
@@ -469,7 +491,7 @@ pkgs.stdenv.mkDerivation {
     ],
     "name": "hello",
     "outputs": {
-      "out": { "path": "/nix/store/59ahk43mxi8kwdir6akjgwmqvn5waaaj-hello" }
+      "out": { "path": "/nix/store/rmkrazrqfy8zpk1h52qnjrj9qlcyh9mv-hello" }
     },
     "system": "aarch64-linux"
   }
@@ -507,8 +529,7 @@ pkgs.stdenv.mkDerivation {
   name = "hello";
   src = ./src;
 
-  buildInputs = with pkgs; [ gcc ];
-  nativeBuildInputs = with pkgs; [ makeWrapper ];
+  nativeBuildInputs = with pkgs; [ gcc makeWrapper ];
   buildPhase = ''
     gcc main.c -o hello
   '';
@@ -529,7 +550,7 @@ pkgs.stdenv.mkDerivation {
 *`/bin/hello` is a wrapper script instead of real binary*
 
 ```bash { .r-stretch .s-full-width }
-$ cat /nix/store/44ch2hg94m2yh64c17l4amdpnlq3kfhn-hello/bin/hello
+$ cat /nix/store/z7i77wwagy58f6svxc8ksm5snsc8wnrm-hello/bin/hello
 
 #! /nix/store/0c337gsdfjf3162avbkchh0yh4qbs2s3-bash-5.2-p15/bin/bash -e
 PATH=${PATH:+':'$PATH':'}
@@ -538,7 +559,7 @@ PATH='/nix/store/klqwsfd2xn14bb977d5dvjqdjpp6ka74-cowsay-3.7.0/bin'$PATH
 PATH=${PATH#':'}
 PATH=${PATH%':'}
 export PATH
-exec -a "$0" "/nix/store/44ch2hg94m2yh64c17l4amdpnlq3kfhn-hello/bin/.hello-wrapped"  "$@" 
+exec -a "$0" "/nix/store/z7i77wwagy58f6svxc8ksm5snsc8wnrm-hello/bin/.hello-wrapped"  "$@" 
 ```
 :::
 :::
@@ -552,16 +573,6 @@ exec -a "$0" "/nix/store/44ch2hg94m2yh64c17l4amdpnlq3kfhn-hello/bin/.hello-wrapp
 - Packages can be signed before being added to binary cache or on the fly as they are served.
 :::
 
-## Sandboxing
-
-::: { .incremental }
-- Builds only see specified inputs, and no other files.
-  - Assume nothing in global paths like `/bin`, `/usr/bin`.
-- Private version of `/proc`, `/dev`, `/dev/shm` and `/dev/pts` (Linux-only).
-  - Therefore, private PID, mount, IPS, UTS namespace, etc.
-  - No networking access during build.
-:::
-
 ## [NixPkgs](https://github.com/nixos/nixpkgs)
 
 *There are many languages/frameworks, complicated.*
@@ -573,6 +584,8 @@ exec -a "$0" "/nix/store/44ch2hg94m2yh64c17l4amdpnlq3kfhn-hello/bin/.hello-wrapp
 ---
 
 *It seems to restrictive for majority packages to onboard?*
+
+[Nix Search - Packages](https://search.nixos.org)
 
 [Repology](https://repology.org/repositories/graphs)
 
@@ -619,6 +632,9 @@ Two possibilities:
 - *Activation script*: an idempotent script making things accessible.
 - e.g. add all package outputs to `$PATH`.
 - Executed while initializing profile.
+  ```bash
+  nix-shell -p hello
+  ```
 :::
 
 ## Removal
@@ -733,8 +749,6 @@ NixOS leverages Nix to manage both altogether.
 }
 ```
 
----
-
 - Nixpkgs also provide configuration modules, [search here](https://search.nixos.org/options?).
 - How I manage my devices: [github:codgician/serenitea-pot](https://github.com/codgician/serenitea-pot).
 - Demo.
@@ -767,7 +781,7 @@ NixOS leverages Nix to manage both altogether.
 ---
 
 ::: { .fragment .semi-fade-out data-fragment-index="1" }
-Nix is still gaining increasing visibility and popularity.
+Nix/NixOS is still gaining increasing visibility and popularity.
 
 [Google trends: NixOS](https://trends.google.com/trends/explore?date=today%205-y&q=NixOS)
 
