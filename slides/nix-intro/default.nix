@@ -5,7 +5,7 @@ lib.seelies.mkRevealJs {
 
   name = "nix-intro";
   title = "Introducing Nix: declarative builds and deployments";
-  version = "2024.05.20-0";
+  version = "2024.05.20-1";
   src = ./.;
   license = lib.licenses.cc-by-nc-sa-40;
 
