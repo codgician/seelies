@@ -2,7 +2,7 @@
   description = "A collection of slides made by codgician.";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     flake-utils.url = "github:numtide/flake-utils";
     reveal-js = {
       url = "github:hakimel/reveal.js";
