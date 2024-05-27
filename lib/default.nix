@@ -1,5 +1,5 @@
 { nixpkgs, ... }: rec {
-  # Put all custom library functions under "seelie" namespace
+  # Put all custom library functions under "seelies" namespace
   seelies =
     let
       lib = nixpkgs.lib // { inherit seelies; };
@@ -8,7 +8,7 @@
     concatAttrs [
       (import ./reveal-js.nix)
       (import ./filesystem.nix { inherit lib; })
-      (import ./misc.nix { inherit lib; })
       (import ./site.nix)
+      ({ inherit concatAttrs; })
     ];
 }
