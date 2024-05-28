@@ -49,7 +49,7 @@
       apps = (builtins.mapAttrs (k: v: mkSlideApp v) packages) // {
         repl = inputs.flake-utils.lib.mkApp {
           drv = pkgs.writeShellScriptBin "repl" ''
-            nix repl --expr 'builtins.getFlake "${./.}"'
+            nix repl --expr "builtins.getFlake (toString $(${pkgs.git}/bin/git rev-parse --show-toplevel))"
           '';
         };
       };
