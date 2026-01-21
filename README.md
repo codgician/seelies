@@ -1,3 +1,5 @@
+# Content migrated to https://codgician.me/en/slides/
+
 # Seelies (WIP)
 
 [![build](https://github.com/codgician/seelies/actions/workflows/build.yml/badge.svg)](https://github.com/codgician/seelies/actions/workflows/build.yml)
